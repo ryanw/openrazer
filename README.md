@@ -146,6 +146,7 @@ The devices below are fully feature supported by OpenRazer, which means all avai
 ### Misc
 | Device                                        | USB VID:PID |
 | --------------------------------------------- | ----------- |
+| Razer Mouse Dock Chroma                       |  1532:007E  |
 | Razer Nostromo                                |  1532:0111  |
 | Razer Orbweaver                               |  1532:0113  |
 | Razer Tartarus                                |  1532:0201  |
