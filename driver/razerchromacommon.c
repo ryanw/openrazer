@@ -489,6 +489,20 @@ struct razer_report razer_chroma_standard_matrix_set_custom_frame(unsigned char 
  */
 
 /**
+ * Get the device matrix effect
+ */
+struct razer_report razer_chroma_extended_matrix_get_effect(unsigned char variable_storage, unsigned char led_id)
+{
+    struct razer_report report = get_razer_report(0x0F, 0x82, 0x03);
+    report.transaction_id.id = 0x3F;
+
+    report.arguments[0] = variable_storage;
+    report.arguments[1] = led_id;
+
+    return report;
+}
+
+/**
  * Sets up the extended matrix effect payload
  */
 struct razer_report razer_chroma_extended_matrix_effect_base(unsigned char arg_size, unsigned char variable_storage, unsigned char led_id, unsigned char effect_id)
