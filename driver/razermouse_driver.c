@@ -2632,6 +2632,54 @@ static ssize_t razer_attr_write_scroll_mode_none(struct device *dev, struct devi
     return count;
 }
 
+static ssize_t razer_attr_read_logo_mode(struct device *dev, struct device_attribute *attr, char *buf)
+{
+    struct usb_interface *intf = to_usb_interface(dev->parent);
+    struct usb_device *usb_dev = interface_to_usbdev(intf);
+    struct razer_report report = {0};
+    struct razer_report response = {0};
+
+    report = razer_chroma_extended_matrix_get_effect(VARSTORE, LOGO_LED);
+    response = razer_send_payload(usb_dev, &report);
+
+    return sprintf(buf, "%u\n%u\n%u\n%u\n%u:%u:%u\n%u:%u:%u",
+        response.arguments[2],  // Effect
+        response.arguments[3],  // Direction
+        response.arguments[4],  // Speed
+        response.arguments[5],  // Number of colors
+        response.arguments[6],  // Red
+        response.arguments[7],  // Green
+        response.arguments[8],  // Blue
+        response.arguments[9],  // Red
+        response.arguments[10], // Green
+        response.arguments[11]  // Blue
+    );
+}
+
+static ssize_t razer_attr_read_scroll_mode(struct device *dev, struct device_attribute *attr, char *buf)
+{
+    struct usb_interface *intf = to_usb_interface(dev->parent);
+    struct usb_device *usb_dev = interface_to_usbdev(intf);
+    struct razer_report report = {0};
+    struct razer_report response = {0};
+
+    report = razer_chroma_extended_matrix_get_effect(VARSTORE, SCROLL_WHEEL_LED);
+    response = razer_send_payload(usb_dev, &report);
+
+    return sprintf(buf, "%u\n%u\n%u\n%u\n%u:%u:%u\n%u:%u:%u",
+        response.arguments[2],  // Effect
+        response.arguments[3],  // Direction
+        response.arguments[4],  // Speed
+        response.arguments[5],  // Number of colors
+        response.arguments[6],  // Red
+        response.arguments[7],  // Green
+        response.arguments[8],  // Blue
+        response.arguments[9],  // Red
+        response.arguments[10], // Green
+        response.arguments[11]  // Blue
+    );
+}
+
 /**
  * Write device file "logo_mode_wave" (for extended mouse matrix effects)
  *
@@ -3367,6 +3415,7 @@ static DEVICE_ATTR(scroll_led_state,          0660, razer_attr_read_scroll_led_s
 static DEVICE_ATTR(scroll_led_rgb,            0660, razer_attr_read_scroll_led_rgb,        razer_attr_write_scroll_led_rgb);
 static DEVICE_ATTR(scroll_led_effect,         0660, razer_attr_read_scroll_led_effect,     razer_attr_write_scroll_led_effect);
 // For "extended" matrix effects
+static DEVICE_ATTR(scroll_matrix_effect,             0440, razer_attr_read_scroll_mode,    NULL);
 static DEVICE_ATTR(scroll_matrix_effect_wave,        0220, NULL,                           razer_attr_write_scroll_mode_wave);
 static DEVICE_ATTR(scroll_matrix_effect_spectrum,    0220, NULL,                           razer_attr_write_scroll_mode_spectrum);
 static DEVICE_ATTR(scroll_matrix_effect_reactive,    0220, NULL,                           razer_attr_write_scroll_mode_reactive);
@@ -3380,6 +3429,7 @@ static DEVICE_ATTR(logo_led_state,            0660, razer_attr_read_logo_led_sta
 static DEVICE_ATTR(logo_led_rgb,              0660, razer_attr_read_logo_led_rgb,          razer_attr_write_logo_led_rgb);
 static DEVICE_ATTR(logo_led_effect,           0660, razer_attr_read_logo_led_effect,       razer_attr_write_logo_led_effect);
 // For "extended" matrix effects
+static DEVICE_ATTR(logo_matrix_effect,             0440, razer_attr_read_logo_mode,        NULL);
 static DEVICE_ATTR(logo_matrix_effect_wave,        0220, NULL,                             razer_attr_write_logo_mode_wave);
 static DEVICE_ATTR(logo_matrix_effect_spectrum,    0220, NULL,                             razer_attr_write_logo_mode_spectrum);
 static DEVICE_ATTR(logo_matrix_effect_reactive,    0220, NULL,                             razer_attr_write_logo_mode_reactive);
@@ -3841,6 +3891,7 @@ static int razer_mouse_probe(struct hid_device *hdev, const struct hid_device_id
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_scroll_matrix_effect_breath);
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_scroll_matrix_effect_static);
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_scroll_matrix_effect_none);
+            CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_scroll_matrix_effect);
 
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_left_led_brightness);
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_left_matrix_effect_wave);
@@ -3874,6 +3925,7 @@ static int razer_mouse_probe(struct hid_device *hdev, const struct hid_device_id
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_scroll_matrix_effect_breath);
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_scroll_matrix_effect_static);
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_scroll_matrix_effect_none);
+            CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_scroll_matrix_effect);
             break;
 
         case USB_DEVICE_ID_RAZER_NAGA_TRINITY:
@@ -3906,6 +3958,7 @@ static int razer_mouse_probe(struct hid_device *hdev, const struct hid_device_id
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_scroll_matrix_effect_breath);
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_scroll_matrix_effect_static);
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_scroll_matrix_effect_none);
+            CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_scroll_matrix_effect);
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_matrix_effect_custom);
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_matrix_custom_frame);
             break;
@@ -3932,6 +3985,7 @@ static int razer_mouse_probe(struct hid_device *hdev, const struct hid_device_id
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_logo_matrix_effect_breath);
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_logo_matrix_effect_static);
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_logo_matrix_effect_none);
+            CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_logo_matrix_effect);
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_matrix_effect_custom);
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_matrix_custom_frame);
             break;
@@ -4379,6 +4433,7 @@ static void razer_mouse_disconnect(struct hid_device *hdev)
             device_remove_file(&hdev->dev, &dev_attr_logo_matrix_effect_breath);
             device_remove_file(&hdev->dev, &dev_attr_logo_matrix_effect_static);
             device_remove_file(&hdev->dev, &dev_attr_logo_matrix_effect_none);
+            device_remove_file(&hdev->dev, &dev_attr_logo_matrix_effect);
             device_remove_file(&hdev->dev, &dev_attr_matrix_effect_custom);
             device_remove_file(&hdev->dev, &dev_attr_matrix_custom_frame);
             break;

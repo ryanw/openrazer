@@ -314,6 +314,33 @@ static ssize_t razer_attr_write_mode_reactive_trigger(struct device *dev, struct
 }
 
 /**
+ * Read device RGB mode
+ */
+static ssize_t razer_attr_read_mode(struct device *dev, struct device_attribute *attr, char *buf)
+{
+    struct razer_accessory_device *device = dev_get_drvdata(dev);
+    struct razer_report report = report = razer_chroma_extended_matrix_get_effect(VARSTORE, BACKLIGHT_LED);
+    struct razer_report response = {0};
+
+    mutex_lock(&device->lock);
+    response = razer_send_payload(device->usb_dev, &report);
+    mutex_unlock(&device->lock);
+
+    return sprintf(buf, "%u\n%u\n%u\n%u\n%u:%u:%u\n%u:%u:%u",
+        response.arguments[2],  // Effect
+        response.arguments[3],  // Direction
+        response.arguments[4],  // Speed
+        response.arguments[5],  // Number of colors
+        response.arguments[6],  // Red
+        response.arguments[7],  // Green
+        response.arguments[8],  // Blue
+        response.arguments[9],  // Red
+        response.arguments[10], // Green
+        response.arguments[11]  // Blue
+    );
+}
+
+/**
  * Write device file "mode_none"
  *
  * None effect mode is activated whenever the file is written to
@@ -981,6 +1008,7 @@ static DEVICE_ATTR(device_mode,             0660, razer_attr_read_device_mode,  
 static DEVICE_ATTR(device_serial,           0440, razer_attr_read_get_serial,                 NULL);
 static DEVICE_ATTR(firmware_version,        0440, razer_attr_read_get_firmware_version,       NULL);
 
+static DEVICE_ATTR(matrix_effect,           0440, razer_attr_read_mode,                       NULL);
 static DEVICE_ATTR(matrix_effect_none,      0220, NULL,                                       razer_attr_write_mode_none);
 static DEVICE_ATTR(matrix_effect_spectrum,  0220, NULL,                                       razer_attr_write_mode_spectrum);
 static DEVICE_ATTR(matrix_effect_static,    0220, NULL,                                       razer_attr_write_mode_static);
@@ -1112,6 +1140,7 @@ static int razer_accessory_probe(struct hid_device *hdev, const struct hid_devic
         CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_firmware_version);                      // Get string of device fw version
 
         CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_matrix_custom_frame);                   // Custom effect frame
+        CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_matrix_effect);                         // All effects
         CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_matrix_effect_none);                    // No effect
         CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_matrix_effect_static);                  // Static effect
         CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_matrix_effect_breath);                  // Breathing effect
@@ -1257,6 +1286,7 @@ static void razer_accessory_disconnect(struct hid_device *hdev)
         device_remove_file(&hdev->dev, &dev_attr_firmware_version);                      // Get string of device fw version
 
         device_remove_file(&hdev->dev, &dev_attr_matrix_custom_frame);                   // Custom effect frame
+        device_remove_file(&hdev->dev, &dev_attr_matrix_effect);                         // All effects
         device_remove_file(&hdev->dev, &dev_attr_matrix_effect_none);                    // No effect
         device_remove_file(&hdev->dev, &dev_attr_matrix_effect_static);                  // Static effect
         device_remove_file(&hdev->dev, &dev_attr_matrix_effect_breath);                  // Breathing effect
